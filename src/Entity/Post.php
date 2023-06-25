@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 
 #[ORM\Table(name: 'post')]
+#[ORM\Index(columns: ['author_id'], name: 'post__author_id__ind')]
 #[ORM\Entity]
 class Post
 {

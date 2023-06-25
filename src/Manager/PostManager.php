@@ -12,15 +12,15 @@ class PostManager
     {
     }
 
-    public function createPost(User $author, string $text): void
-{
-    $post = new Post();
-    $post->setAuthor($author);
-    $post->setContent($content);
-    $post->setCreatedAt();
-    $post->setUpdatedAt();
-    $author->addPost($post);
-    $this->entityManager->persist($post);
-    $this->entityManager->flush();
-}
+    public function createPost(User $author, string $content): void
+    {
+        $post = new Post();
+        $post->setAuthor($author);
+        $post->setContent($content);
+        $post->setCreatedAt();
+        $post->setUpdatedAt();
+        $author->addPost($post);
+        $this->entityManager->persist($post);
+        $this->entityManager->flush();
+    }
 }
