@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20230618105636 extends AbstractMigration
+final class Version20230626172237 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -27,26 +27,24 @@ final class Version20230618105636 extends AbstractMigration
         $this->addSql('CREATE INDEX subscription__follower_id__ind ON subscription (follower_id)');
         $this->addSql('CREATE TABLE "user" (id BIGSERIAL NOT NULL, login VARCHAR(32) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE TABLE author_follower (author_id BIGINT NOT NULL, follower_id BIGINT NOT NULL, PRIMARY KEY(author_id, follower_id))');
-        $this->addSql('CREATE INDEX author_follower__author_id__ind ON author_follower (author_id)');
-        $this->addSql('CREATE INDEX author_follower__follower_id__ind ON author_follower (follower_id)');
+        $this->addSql('CREATE INDEX IDX_564623F3F675F31B ON author_follower (author_id)');
+        $this->addSql('CREATE INDEX IDX_564623F3AC24F853 ON author_follower (follower_id)');
         $this->addSql('ALTER TABLE post ADD CONSTRAINT FK_5A8A6C8DF675F31B FOREIGN KEY (author_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE subscription ADD CONSTRAINT FK_A3C664D3F675F31B FOREIGN KEY (author_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE subscription ADD CONSTRAINT FK_A3C664D3AC24F853 FOREIGN KEY (follower_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE author_follower ADD CONSTRAINT FK_564623F3F675F31B FOREIGN KEY (author_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE author_follower ADD CONSTRAINT FK_564623F3AC24F853 FOREIGN KEY (follower_id) REFERENCES "user" (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
-        $this->addSql('DROP TABLE test');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SEQUENCE test_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
-        $this->addSql('CREATE TABLE test (id BIGSERIAL NOT NULL, author_id BIGINT DEFAULT NULL)');
-        $this->addSql('ALTER TABLE post DROP CONSTRAINT post__author_id__fk');
-        $this->addSql('ALTER TABLE subscription DROP CONSTRAINT author_follower__follower_id__fk');
-        $this->addSql('ALTER TABLE subscription DROP CONSTRAINT author_follower__author_id__fk');
-        $this->addSql('ALTER TABLE author_follower DROP CONSTRAINT subscription__follower_id__fk');
-        $this->addSql('ALTER TABLE author_follower DROP CONSTRAINT subscription__author_id__fk');
+        $this->addSql('CREATE SCHEMA public');
+        $this->addSql('ALTER TABLE post DROP CONSTRAINT FK_5A8A6C8DF675F31B');
+        $this->addSql('ALTER TABLE subscription DROP CONSTRAINT FK_A3C664D3F675F31B');
+        $this->addSql('ALTER TABLE subscription DROP CONSTRAINT FK_A3C664D3AC24F853');
+        $this->addSql('ALTER TABLE author_follower DROP CONSTRAINT FK_564623F3F675F31B');
+        $this->addSql('ALTER TABLE author_follower DROP CONSTRAINT FK_564623F3AC24F853');
         $this->addSql('DROP TABLE post');
         $this->addSql('DROP TABLE subscription');
         $this->addSql('DROP TABLE "user"');
