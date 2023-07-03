@@ -2,14 +2,17 @@
 
 namespace App\Entity;
 
+use App\Repository\UserRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use JetBrains\PhpStorm\ArrayShape;
 
 #[ORM\Table(name: '`user`')]
-#[ORM\Entity]
-class User
+#[ORM\Entity(repositoryClass: UserRepository::class)]
+class User implements HasMetaTimestampsInterface
 {
     #[ORM\Column(name: 'id', type: 'bigint', unique: true)]
     #[ORM\Id]
@@ -20,9 +23,11 @@ class User
     private string $login;
 
     #[ORM\Column(name: 'created_at', type: 'datetime', nullable: false)]
+    #[Gedmo\Timestampable(on: 'create')]
     private DateTime $createdAt;
 
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: false)]
+    #[Gedmo\Timestampable(on: 'update')]
     private DateTime $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: 'Post')]
@@ -76,6 +81,7 @@ class User
         return $this->createdAt;
     }
 
+    #[ORM\PrePersist]
     public function setCreatedAt(): void {
         $this->createdAt = new DateTime();
     }
@@ -84,6 +90,7 @@ class User
         return $this->updatedAt;
     }
 
+    #[ORM\PreUpdate]
     public function setUpdatedAt(): void {
         $this->updatedAt = new DateTime();
     }
@@ -123,6 +130,17 @@ class User
         }
     }
 
+    #[ArrayShape([
+        'id' => 'int|null',
+        'login' => 'string',
+        'createdAt' => 'string',
+        'updatedAt' => 'string',
+        'posts' => ['id' => 'int|null', 'login' => 'string', 'createdAt' => 'string', 'updatedAt' => 'string'],
+        'followers' => 'string[]',
+        'authors' => 'string[]',
+        'subscriptionFollowers' =>  ['subscriptionId' => 'int|null', 'userId' => 'int|null', 'login' => 'string'],
+        'subscriptionAuthors' =>  ['subscriptionId' => 'int|null', 'userId' => 'int|null', 'login' => 'string'],
+    ])]
     public function toArray(): array
     {
         return [
@@ -131,14 +149,8 @@ class User
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
             'updatedAt' => $this->updatedAt->format('Y-m-d H:i:s'),
             'posts' => array_map(static fn(Post $post) => $post->toArray(), $this->posts->toArray()),
-            'followers' => array_map(
-                static fn(User $user) => ['id' => $user->getId(), 'login' => $user->getLogin()],
-                $this->followers->toArray()
-            ),
-            'authors' => array_map(
-                static fn(User $user) => ['id' => $user->getId(), 'login' => $user->getLogin()],
-                $this->authors->toArray()
-            ),
+            'followers' => array_map(static fn(User $user) => $user->getLogin(), $this->followers->toArray()),
+            'authors' => array_map(static fn(User $user) => $user->getLogin(), $this->authors->toArray()),
             'subscriptionFollowers' => array_map(
                 static fn(Subscription $subscription) => [
                     'subscriptionId' => $subscription->getId(),
