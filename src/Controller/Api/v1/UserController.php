@@ -2,28 +2,32 @@
 
 namespace App\Controller\Api\v1;
 
+use App\DTO\ManageUserDTO;
+use App\Entity\User;
 use App\Manager\UserManager;
+use App\Security\Voter\UserVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-#[Route(path: '/api/v1/user')]
+#[Route(path: 'api/v1/user')]
 class UserController extends AbstractController
 {
-    private const DEFAULT_PAGE = 0;
-    private const DEFAULT_PER_PAGE = 20;
-    
-    public function __construct(private readonly UserManager $userManager)
+    public function __construct(
+        private readonly UserManager $userManager,
+        private readonly AuthorizationCheckerInterface $authorizationChecker,
+    )
     {
     }
 
     #[Route(path: '', methods: ['POST'])]
     public function saveUserAction(Request $request): Response
     {
-        $login = $request->request->get('login');
-        $userId = $this->userManager->saveUser($login);
+        $saveUserDTO = ManageUserDTO::fromRequest($request);
+        $userId = $this->userManager->saveUserFromDTO(new User(), $saveUserDTO);
         [$data, $code] = $userId === null ?
             [['success' => false], Response::HTTP_BAD_REQUEST] :
             [['success' => true, 'userId' => $userId], Response::HTTP_OK];
@@ -36,7 +40,7 @@ class UserController extends AbstractController
     {
         $perPage = $request->query->get('perPage');
         $page = $request->query->get('page');
-        $users = $this->userManager->getUsers($page ?? self::DEFAULT_PAGE, $perPage ?? self::DEFAULT_PER_PAGE);
+        $users = $this->userManager->getUsers($page ?? 0, $perPage ?? 20);
         $code = empty($users) ? Response::HTTP_NO_CONTENT : Response::HTTP_OK;
 
         return new JsonResponse(['users' => array_map(static fn(User $user) => $user->toArray(), $users)], $code);
@@ -46,6 +50,10 @@ class UserController extends AbstractController
     public function deleteUserAction(Request $request): Response
     {
         $userId = $request->query->get('userId');
+        $user = $this->userManager->getUserById($userId);
+        if (!$this->authorizationChecker->isGranted(UserVoter::DELETE, $user)) {
+            return new JsonResponse('Access denied', Response::HTTP_FORBIDDEN);
+        }
         $result = $this->userManager->deleteUserById($userId);
 
         return new JsonResponse(['success' => $result], $result ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
@@ -55,17 +63,9 @@ class UserController extends AbstractController
     public function updateUserAction(Request $request): Response
     {
         $userId = $request->query->get('userId');
-        $login = $request->query->get('login');
+        $login = $request->request->get('login');
         $result = $this->userManager->updateUser($userId, $login);
 
-        return new JsonResponse(['success' => $result !== null], ($result !== null) ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
-    }
-
-    #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
-    public function deleteUserByIdAction(int $id): Response
-    {
-        $result = $this->userManager->deleteUserById($id);
-
-        return new JsonResponse(['success' => $result], $result ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
+        return new JsonResponse(['success' => $result], $result ? Response::HTTP_OK : Response::HTTP_BAD_REQUEST);
     }
 }

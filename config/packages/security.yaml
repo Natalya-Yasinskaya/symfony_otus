@@ -29,8 +29,8 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/api/v3/user, roles: ROLE_ADMIN, methods: [DELETE] }
-        - { path: ^/api/v3/user, roles: ROLE_VIEW, methods: [GET, POST, PATCH] }
+        - { path: ^/api/v1/user, roles: ROLE_ADMIN, methods: [DELETE] }
+        - { path: ^/api/v1/user, roles: ROLE_VIEW, methods: [GET, POST, PATCH] }
 
     role_hierarchy:
         ROLE_ADMIN: ROLE_VIEW
