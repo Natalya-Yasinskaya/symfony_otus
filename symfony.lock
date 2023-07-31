@@ -59,6 +59,31 @@
             "config/packages/jms_serializer.yaml"
         ]
     },
+    "lexik/jwt-authentication-bundle": {
+        "version": "2.19",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "2.5",
+            "ref": "e9481b233a11ef7e15fe055a2b21fd3ac1aa2bb7"
+        },
+        "files": [
+            "config/packages/lexik_jwt_authentication.yaml"
+        ]
+    },
+    "php-amqplib/rabbitmq-bundle": {
+        "version": "2.11",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.12",
+            "ref": "ce3ca2e4577270c4f518539aa6b9e878998fcfef"
+        },
+        "files": [
+            "config/packages/old_sound_rabbit_mq.yaml",
+            "src/Consumer/.gitignore"
+        ]
+    },
     "sensio/framework-extra-bundle": {
         "version": "6.2",
         "recipe": {

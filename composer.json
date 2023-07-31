@@ -13,6 +13,7 @@
         "friendsofsymfony/rest-bundle": "*",
         "jms/serializer-bundle": "*",
         "lexik/jwt-authentication-bundle": "*",
+        "php-amqplib/rabbitmq-bundle": "*",
         "sensio/framework-extra-bundle": "*",
         "stof/doctrine-extensions-bundle": "*",
         "symfony/console": "6.3.*",
