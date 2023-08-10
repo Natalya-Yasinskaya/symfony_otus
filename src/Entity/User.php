@@ -49,16 +49,11 @@ class User implements HasMetaTimestampsInterface
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: 'Subscription')]
     private Collection $subscriptionFollowers;
 
-    #[ORM\Column(type: 'string', length: 32, nullable: false)]
-    private string $password;
+    #[ORM\Column(type: 'string', length: 32, unique: true, nullable: true)]
+    private ?string $token = null;
 
-    #[Assert\NotBlank]
-    #[Assert\GreaterThan(18)]
-    #[ORM\Column(type: 'integer', nullable: false)]
-    private int $age;
-
-    #[ORM\Column(type: 'string', nullable: false)]
-    private string $location;
+    #[ORM\Column(type: 'json', length: 1024, nullable: false)]
+    private array $roles = [];
 
     public function __construct()
     {
@@ -142,42 +137,34 @@ class User implements HasMetaTimestampsInterface
         }
     }
 
-    public function getPassword(): string
+    public function getToken(): ?string
     {
-        return $this->password;
+        return $this->token;
     }
 
-    public function setPassword(string $password): void
+    public function setToken(?string $token): void
     {
-        $this->password = $password;
-    }
-
-    public function getAge(): int
-    {
-        return $this->age;
-    }
-
-    public function setAge(int $age): void
-    {
-        $this->age = $age;
-    }
-
-    public function getLocation(): string
-    {
-        return $this->location;
-    }
-
-    public function setLocation(string $location): void
-    {
-        $this->location = $location;
+        $this->token = $token;
     }
 
     /**
-     * @return User[]
+     * @return string[]
      */
-    public function getFollowers(): array
+    public function getRoles(): array
     {
-        return $this->followers->toArray();
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @param string[] $roles
+     */
+    public function setRoles(array $roles): void
+    {
+        $this->roles = $roles;
     }
 
     #[ArrayShape([

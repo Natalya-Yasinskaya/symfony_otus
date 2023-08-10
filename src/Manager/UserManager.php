@@ -74,27 +74,29 @@ class UserManager
     {
         /** @var UserRepository $userRepository */
         $userRepository = $this->entityManager->getRepository(User::class);
-
         return $userRepository->getUsers($page, $perPage);
     }
 
-    public function saveUserFromDTO(User $user, ManageUserDTO $manageUserDTO): ?int
-    {
-        $user->setLogin($manageUserDTO->login);
-        $user->setPassword($manageUserDTO->password);
-        $user->setAge($manageUserDTO->age);
-        $user->setLocation($manageUserDTO->location);
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
-
-        return $user->getId();
-    }
-
-    public function getUserById(int $id): ?User
+    public function findUserByLogin(string $login): ?User
     {
         /** @var UserRepository $userRepository */
         $userRepository = $this->entityManager->getRepository(User::class);
+        /** @var User|null $user */
+        $user = $userRepository->findOneBy(['login' => $login]);
+    
+        return $user;
+    }
 
-        return $userRepository->find($id);
+    public function updateUserToken(string $login): ?string
+    {
+    $user = $this->findUserByLogin($login);
+        if ($user === null) {
+            return false;
+        }
+        $token = base64_encode(random_bytes(20));
+        $user->setToken($token);
+        $this->entityManager->flush();
+    
+        return $token;
     }
 }
