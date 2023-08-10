@@ -3,17 +3,18 @@
 namespace App\Manager;
 
 use App\DTO\ManageUserDTO;
+use App\DTO\ManageUserDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserManager
 {
-    private EntityManagerInterface $entityManager;
-
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UserPasswordHasherInterface $userPasswordHasher,
+    ) {
     }
 
     public function saveUserByLogin(string $login): ?int
@@ -77,26 +78,60 @@ class UserManager
         return $userRepository->getUsers($page, $perPage);
     }
 
+    public function saveUserFromDTO(User $user, ManageUserDTO $manageUserDTO): ?int
+    {
+        $user->setLogin($manageUserDTO->login);
+        $user->setPassword($this->userPasswordHasher->hashPassword($user, $manageUserDTO->password));
+        $user->setAge($manageUserDTO->age);
+        $user->setIsActive($manageUserDTO->isActive);
+        $user->setRoles($manageUserDTO->roles);
+        $user->setPhone($manageUserDTO->phone);
+        $user->setEmail($manageUserDTO->email);
+        $user->setPreferred($manageUserDTO->preferred);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        return $user->getId();
+    }
+
+    public function getUserById(int $id): ?User
+    {
+        /** @var UserRepository $userRepository */
+        $userRepository = $this->entityManager->getRepository(User::class);
+
+        return $userRepository->find($id);
+    }
+
     public function findUserByLogin(string $login): ?User
     {
         /** @var UserRepository $userRepository */
         $userRepository = $this->entityManager->getRepository(User::class);
         /** @var User|null $user */
         $user = $userRepository->findOneBy(['login' => $login]);
-    
+
         return $user;
     }
 
     public function updateUserToken(string $login): ?string
     {
-    $user = $this->findUserByLogin($login);
+        $user = $this->findUserByLogin($login);
         if ($user === null) {
             return false;
         }
         $token = base64_encode(random_bytes(20));
         $user->setToken($token);
         $this->entityManager->flush();
-    
+
         return $token;
+    }
+
+    public function findUserByToken(string $token): ?User
+    {
+        /** @var UserRepository $userRepository */
+        $userRepository = $this->entityManager->getRepository(User::class);
+        /** @var User|null $user */
+        $user = $userRepository->findOneBy(['token' => $token]);
+
+        return $user;
     }
 }

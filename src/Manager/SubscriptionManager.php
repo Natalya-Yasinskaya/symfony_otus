@@ -1,45 +1,36 @@
 <?php
 
-namespace App\Service;
+namespace App\Manager;
 
+use App\Entity\Subscription;
 use App\Entity\User;
-use App\Manager\SubscriptionManager;
-use App\Manager\PostManager;
-use App\Manager\UserManager;
+use Doctrine\ORM\EntityManagerInterface;
 
-class UserBuilderService
+class SubscriptionManager
 {
-    public function __construct(
-        private readonly PostManager $postManager,
-        private readonly UserManager $userManager,
-        private readonly SubscriptionManager $subscriptionManager,
-    )
+    public function __construct(private readonly EntityManagerInterface $entityManager)
     {
     }
 
-    /**
-     * @param string[] $texts
-     */
-    public function createUserWithPosts(string $login, array $texts): User
+    public function addSubscription(User $author, User $follower): void
     {
-        $user = $this->userManager->create($login);
-        foreach ($texts as $text) {
-            $this->postManager->createPost($user, $text);
-        }
-
-        return $user;
+        $subscription = new Subscription();
+        $subscription->setAuthor($author);
+        $subscription->setFollower($follower);
+        $subscription->setCreatedAt();
+        $subscription->setUpdatedAt();
+        $author->addSubscriptionFollower($subscription);
+        $follower->addSubscriptionAuthor($subscription);
+        $this->entityManager->persist($subscription);
+        $this->entityManager->flush();
     }
 
     /**
-     * @return User[]
+     * @return Subscription[]
      */
-    public function createUserWithFollower(string $login, string $followerLogin): array
+    public function findAllByAuthor(User $author): array
     {
-        $user = $this->userManager->create($login);
-        $follower = $this->userManager->create($followerLogin);
-        $this->userManager->subscribeUser($user, $follower);
-        $this->subscriptionManager->addSubscription($user, $follower);
-
-        return [$user, $follower];
+        $subscriptionRepository = $this->entityManager->getRepository(Subscription::class);
+        return $subscriptionRepository->findBy(['author' => $author]) ?? [];
     }
 }

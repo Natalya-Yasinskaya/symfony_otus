@@ -19,6 +19,7 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+            - '../src/Controller/Common/*'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
@@ -81,3 +82,8 @@ services:
     App\EventListener\DeprecatedApiExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }
+
+    App\Service\AsyncService:
+        calls:
+            - ['registerProducer', [!php/const App\Service\AsyncService::ADD_FOLLOWER, '@old_sound_rabbit_mq.add_followers_producer']]
+        

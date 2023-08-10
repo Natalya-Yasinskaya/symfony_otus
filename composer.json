@@ -13,6 +13,7 @@
         "friendsofsymfony/rest-bundle": "*",
         "jms/serializer-bundle": "*",
         "lexik/jwt-authentication-bundle": "*",
+        "php-amqplib/rabbitmq-bundle": "*",
         "sensio/framework-extra-bundle": "*",
         "stof/doctrine-extensions-bundle": "*",
         "symfony/console": "6.3.*",
@@ -23,10 +24,10 @@
         "symfony/framework-bundle": "6.3.*",
         "symfony/runtime": "6.3.*",
         "symfony/security-bundle": "6.3.*",
+        "symfony/security-bundle": "6.3.*",
         "symfony/twig-bundle": "6.3.*",
         "symfony/validator": "6.3.*",
         "symfony/webpack-encore-bundle": "*",
-        "symfony/validator": "6.3.*",
         "symfony/yaml": "6.3.*"
     },
     "config": {

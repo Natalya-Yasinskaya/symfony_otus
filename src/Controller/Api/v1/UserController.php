@@ -67,14 +67,6 @@ class UserController extends AbstractController
         $login = $request->request->get('login');
         $result = $this->userManager->updateUser($userId, $login);
 
-        return new JsonResponse(['success' => $result !== null], ($result !== null) ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
-    }
-
-    #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
-    public function deleteUserByIdAction(int $id): Response
-    {
-        $result = $this->userManager->deleteUserById($id);
-
-        return new JsonResponse(['success' => $result], $result ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
+        return new JsonResponse(['success' => $result], $result ? Response::HTTP_OK : Response::HTTP_BAD_REQUEST);
     }
 }
