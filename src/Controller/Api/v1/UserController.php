@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Manager\UserManager;
 use App\Security\Voter\UserVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

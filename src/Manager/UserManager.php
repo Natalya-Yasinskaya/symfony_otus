@@ -3,6 +3,7 @@
 namespace App\Manager;
 
 use App\DTO\ManageUserDTO;
+use App\DTO\ManageUserDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -74,7 +75,6 @@ class UserManager
     {
         /** @var UserRepository $userRepository */
         $userRepository = $this->entityManager->getRepository(User::class);
-
         return $userRepository->getUsers($page, $perPage);
     }
 
