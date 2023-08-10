@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JetBrains\PhpStorm\ArrayShape;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Table(name: '`user`')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -47,6 +48,17 @@ class User implements HasMetaTimestampsInterface
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: 'Subscription')]
     private Collection $subscriptionFollowers;
+
+    #[ORM\Column(type: 'string', length: 32, nullable: false)]
+    private string $password;
+
+    #[Assert\NotBlank]
+    #[Assert\GreaterThan(18)]
+    #[ORM\Column(type: 'integer', nullable: false)]
+    private int $age;
+
+    #[ORM\Column(type: 'string', nullable: false)]
+    private string $location;
 
     public function __construct()
     {
@@ -130,6 +142,44 @@ class User implements HasMetaTimestampsInterface
         }
     }
 
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): void
+    {
+        $this->password = $password;
+    }
+
+    public function getAge(): int
+    {
+        return $this->age;
+    }
+
+    public function setAge(int $age): void
+    {
+        $this->age = $age;
+    }
+
+    public function getLocation(): string
+    {
+        return $this->location;
+    }
+
+    public function setLocation(string $location): void
+    {
+        $this->location = $location;
+    }
+
+    /**
+     * @return User[]
+     */
+    public function getFollowers(): array
+    {
+        return $this->followers->toArray();
+    }
+
     #[ArrayShape([
         'id' => 'int|null',
         'login' => 'string',
@@ -148,7 +198,7 @@ class User implements HasMetaTimestampsInterface
             'login' => $this->login,
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
             'updatedAt' => $this->updatedAt->format('Y-m-d H:i:s'),
-            'posts' => array_map(static fn(Post $post) => $post->toArray(), $this->posts->toArray()),
+            'post' => array_map(static fn(Post $post) => $post->toArray(), $this->posts->toArray()),
             'followers' => array_map(static fn(User $user) => $user->getLogin(), $this->followers->toArray()),
             'authors' => array_map(static fn(User $user) => $user->getLogin(), $this->authors->toArray()),
             'subscriptionFollowers' => array_map(
