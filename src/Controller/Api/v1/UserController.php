@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Manager\UserManager;
 use App\Security\Voter\UserVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -66,6 +67,14 @@ class UserController extends AbstractController
         $login = $request->request->get('login');
         $result = $this->userManager->updateUser($userId, $login);
 
-        return new JsonResponse(['success' => $result], $result ? Response::HTTP_OK : Response::HTTP_BAD_REQUEST);
+        return new JsonResponse(['success' => $result !== null], ($result !== null) ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
+    }
+
+    #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
+    public function deleteUserByIdAction(int $id): Response
+    {
+        $result = $this->userManager->deleteUserById($id);
+
+        return new JsonResponse(['success' => $result], $result ? Response::HTTP_OK : Response::HTTP_NOT_FOUND);
     }
 }

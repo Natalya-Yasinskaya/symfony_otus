@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JetBrains\PhpStorm\ArrayShape;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Table(name: '`user`')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -184,7 +185,7 @@ class User implements HasMetaTimestampsInterface
             'login' => $this->login,
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
             'updatedAt' => $this->updatedAt->format('Y-m-d H:i:s'),
-            'posts' => array_map(static fn(Post $post) => $post->toArray(), $this->posts->toArray()),
+            'post' => array_map(static fn(Post $post) => $post->toArray(), $this->posts->toArray()),
             'followers' => array_map(static fn(User $user) => $user->getLogin(), $this->followers->toArray()),
             'authors' => array_map(static fn(User $user) => $user->getLogin(), $this->authors->toArray()),
             'subscriptionFollowers' => array_map(
