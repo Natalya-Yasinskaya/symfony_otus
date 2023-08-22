@@ -3,10 +3,14 @@
 namespace App\Manager;
 
 use App\DTO\ManageUserDTO;
-use App\DTO\ManageUserDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Elastica\Aggregation\Terms;
+use Elastica\Query;
+use Elastica\Query\QueryString;
+use FOS\ElasticaBundle\Finder\PaginatedFinderInterface;
+use FOS\ElasticaBundle\Paginator\FantaPaginatorAdapter;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserManager
@@ -14,6 +18,7 @@ class UserManager
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
+        private readonly PaginatedFinderInterface $finder,
     ) {
     }
 
@@ -25,12 +30,6 @@ class UserManager
         $this->entityManager->flush();
 
         return $user->getId();
-    }
-
-    public function saveUser(User $user): void
-    {
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
     }
 
     public function updateUser(int $userId, string $login): ?User
@@ -48,7 +47,7 @@ class UserManager
         return $user;
     }
 
-    public function deleteUserById(int $userId): bool
+    public function deleteUserById(int $userId)
     {
         /** @var UserRepository $userRepository */
         $userRepository = $this->entityManager->getRepository(User::class);
@@ -75,7 +74,14 @@ class UserManager
     {
         /** @var UserRepository $userRepository */
         $userRepository = $this->entityManager->getRepository(User::class);
+
         return $userRepository->getUsers($page, $perPage);
+    }
+
+    public function saveUser(User $user): void
+    {
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
     }
 
     public function saveUserFromDTO(User $user, ManageUserDTO $manageUserDTO): ?int
@@ -133,5 +139,51 @@ class UserManager
         $user = $userRepository->findOneBy(['token' => $token]);
 
         return $user;
+    }
+
+    /**
+     * @return User[]
+     */
+    public function findUserByQuery(string $query, int $perPage, int $page): array
+    {
+        $paginatedResult = $this->finder->findPaginated($query);
+        $paginatedResult->setMaxPerPage($perPage);
+        $paginatedResult->setCurrentPage($page);
+        $result = [];
+        array_push($result, ...$paginatedResult->getCurrentPageResults());
+
+        return $result;
+    }
+
+    /**
+     * @return User[]
+     */
+    public function findUserWithAggregation(string $field): array
+    {
+        $aggregation = new Terms('notifications');
+        $aggregation->setField($field);
+        $query = new Query();
+        $query->addAggregation($aggregation);
+        $paginatedResult = $this->finder->findPaginated($query);
+        /** @var FantaPaginatorAdapter $adapter */
+        $adapter = $paginatedResult->getAdapter();
+
+        return $adapter->getAggregations();
+    }
+
+    /**
+     * @return User[]
+     */
+    public function findUserByQueryWithAggregation(string $queryString, string $field): array
+    {
+        $aggregation = new Terms('notifications');
+        $aggregation->setField($field);
+        $query = new Query(new QueryString($queryString));
+        $query->addAggregation($aggregation);
+        $paginatedResult = $this->finder->findPaginated($query);
+        /** @var FantaPaginatorAdapter $adapter */
+        $adapter = $paginatedResult->getAdapter();
+
+        return $adapter->getAggregations();
     }
 }

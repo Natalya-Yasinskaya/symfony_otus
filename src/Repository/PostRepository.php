@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityRepository;
 class PostRepository extends EntityRepository
 {
     /**
-     * @return Tweet[]
+     * @return Post[]
      */
     public function getPost(int $page, int $perPage): array
     {

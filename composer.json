@@ -10,6 +10,7 @@
         "doctrine/doctrine-bundle": "*",
         "doctrine/doctrine-migrations-bundle": "*",
         "doctrine/orm": "*",
+        "friendsofsymfony/elastica-bundle": "*",
         "friendsofsymfony/rest-bundle": "*",
         "jms/serializer-bundle": "*",
         "lexik/jwt-authentication-bundle": "*",
@@ -23,7 +24,6 @@
         "symfony/form": "6.3.*",
         "symfony/framework-bundle": "6.3.*",
         "symfony/runtime": "6.3.*",
-        "symfony/security-bundle": "6.3.*",
         "symfony/security-bundle": "6.3.*",
         "symfony/twig-bundle": "6.3.*",
         "symfony/validator": "6.3.*",
@@ -45,7 +45,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "App\\Tests\\": "tests/"
+            "UnitTests\\": "tests/unit"
         }
     },
     "replace": {
@@ -79,6 +79,9 @@
         }
     },
     "require-dev": {
-        "symfony/maker-bundle": "^1.49"
+        "doctrine/doctrine-fixtures-bundle": "^3.4",
+        "mockery/mockery": "^1.6",
+        "symfony/maker-bundle": "^1.49",
+        "symfony/phpunit-bridge": "*"
     }
 }

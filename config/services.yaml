@@ -28,6 +28,11 @@ services:
         tags:
             - { name: doctrine.event_subscriber, connection: default }
 
+    monolog.formatter.app_formatter:
+        class: Monolog\Formatter\LineFormatter
+        arguments:
+            - "[%%level_name%%]: [%%datetime%%] %%message%%\n"
+
     strong_formatter:
         class: App\Service\FormatService
         factory: ['App\Service\FormatServiceFactory', 'strongFormatService']
@@ -42,6 +47,10 @@ services:
         class: App\Service\FormatService
         factory: ['@App\Service\FormatServiceFactory', 'headerFormatService']
         arguments: [1]
+
+    App\Controller\WorldController:
+        arguments:
+            $formatService: '@list_formatter'
 
     hello_greeter:
         class: App\Service\GreeterService
@@ -75,15 +84,102 @@ services:
             - [setTag, ['li']]
         tags: ['app.formatter_service']
 
-    App\Controller\WorldController:
-        arguments:
-            $formatService: '@list_formatter'
-
     App\EventListener\DeprecatedApiExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }
 
+    App\Service\AuthService:
+        arguments:
+            $tokenTTL: '%env(JWT_TTL_SEC)%'
+
+    App\Client\StatsdAPIClient:
+        arguments:
+            - graphite
+            - 8125
+            - my_app
+
+    App\Controller\Api\CreateUser\v5\CreateUserManager: ~
+
+    App\Controller\Api\CreateUser\v5\CreateUserAction:
+        arguments: ['@App\Controller\Api\CreateUser\v5\CreateUserManagerLoggerDecorator']
+
+    App\Controller\Api\CreateUser\v5\CreateUserManagerLoggerDecorator:
+        decorates: App\Controller\Api\CreateUser\v5\CreateUserManager
+        arguments: ['@.inner']
+
+    redis_client:
+        class: Redis
+        factory: Symfony\Component\Cache\Adapter\RedisAdapter::createConnection
+        arguments:
+            - '%env(REDIS_DSN)%'
+
+    redis_adapter:
+        class: Symfony\Component\Cache\Adapter\RedisTagAwareAdapter
+        arguments:
+            - '@redis_client'
+            - 'my_app'
+
+    App\Manager\PostManager:
+        arguments:
+            $cache: '@redis_adapter'
+
     App\Service\AsyncService:
         calls:
             - ['registerProducer', [!php/const App\Service\AsyncService::ADD_FOLLOWER, '@old_sound_rabbit_mq.add_followers_producer']]
-        
+            - ['registerProducer', [!php/const App\Service\AsyncService::PUBLISH_POST, '@old_sound_rabbit_mq.publish_post_producer']]
+            - ['registerProducer', [!php/const App\Service\AsyncService::SEND_NOTIFICATION, '@old_sound_rabbit_mq.send_notification_producer']]
+            - ['registerProducer', [!php/const App\Service\AsyncService::UPDATE_FEED, '@old_sound_rabbit_mq.update_feed_producer']]
+
+    App\Consumer\UpdateFeed\Consumer0:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_0'
+
+    App\Consumer\UpdateFeed\Consumer1:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_1'
+
+    App\Consumer\UpdateFeed\Consumer2:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_2'
+
+    App\Consumer\UpdateFeed\Consumer3:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_3'
+
+    App\Consumer\UpdateFeed\Consumer4:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_4'
+
+    App\Consumer\UpdateFeed\Consumer5:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_5'
+
+    App\Consumer\UpdateFeed\Consumer6:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_6'
+
+    App\Consumer\UpdateFeed\Consumer7:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_7'
+
+    App\Consumer\UpdateFeed\Consumer8:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_8'
+
+    App\Consumer\UpdateFeed\Consumer9:
+        class: App\Consumer\UpdateFeed\Consumer
+        arguments:
+            $key: 'update_feed_9'
+
+    App\Manager\UserManager:
+        arguments:
+            $finder: '@fos_elastica.finder.user'
