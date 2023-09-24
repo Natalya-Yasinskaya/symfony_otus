@@ -5,6 +5,8 @@ namespace App\Entity;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
+#[ApiResource]
+#[ApiFilter(SearchFilter::class, properties: ['follower.login' => 'partial'])]
 #[ORM\Table(name: 'subscription')]
 #[ORM\Index(columns: ['author_id'], name: 'subscription__author_id__ind')]
 #[ORM\Index(columns: ['follower_id'], name: 'subscription__follower_id__ind')]

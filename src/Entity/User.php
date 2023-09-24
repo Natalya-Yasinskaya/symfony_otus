@@ -13,6 +13,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as JMS;
 
+#[ApiResource(graphql: ['itemQuery' => ['item_query' => UserResolver::class, 'args' => ['id' => ['type' => 'Int'], 'login' => ['type' => 'String']], 'read' => false], 'collectionQuery' => ['collection_query' => UserCollectionResolver::class]])]
+#[ApiFilter(OrderFilter::class, properties: ['login'])]
 #[ORM\Table(name: '`user`')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthenticatedUserInterface
@@ -88,6 +90,9 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
     #[JMS\Groups(['elastica'])]
     private ?string $preferred = null;
+
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private ?bool $isProtected;
 
     public function __construct()
     {
@@ -167,6 +172,14 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
         if (!$this->subscriptionFollowers->contains($subscription)) {
             $this->subscriptionFollowers->add($subscription);
         }
+    }
+
+    /**
+    * @return Subscription[]
+    */
+    public function getSubscriptionFollowers(): array
+    {
+        return $this->subscriptionFollowers->toArray();
     }
 
     public function toArray(): array
@@ -257,11 +270,13 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     }
 
     /**
-     * @param string[] $roles
-     */
-    public function setRoles(array $roles): void
+    * @param string[]|string $roles
+    *
+    * @throws JsonException
+    */
+    public function setRoles($roles): void
     {
-        $this->roles = $roles;
+        $this->roles = is_array($roles)? json_encode($roles, JSON_THROW_ON_ERROR) : $roles;
     }
 
     public function getSalt(): ?string
@@ -321,5 +336,15 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     public function setPreferred(?string $preferred): void
     {
         $this->preferred = $preferred;
+    }
+
+    public function isProtected(): bool
+    {
+        return $this->isProtected ?? false;
+    }
+
+    public function setIsProtected(bool $isProtected): void
+    {
+        $this->isProtected = $isProtected;
     }
 }
