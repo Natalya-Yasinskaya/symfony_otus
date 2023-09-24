@@ -9,7 +9,11 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation as JMS;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as JMS;
 
@@ -18,7 +22,11 @@ use JMS\Serializer\Annotation as JMS;
 #[ORM\Table(name: '`user`')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthenticatedUserInterface
+class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const EMAIL_NOTIFICATION = 'email';
+    public const SMS_NOTIFICATION = 'sms';
+
     public const EMAIL_NOTIFICATION = 'email';
     public const SMS_NOTIFICATION = 'sms';
 
@@ -26,16 +34,21 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[JMS\Groups(['user-id-list'])]
+    #[JMS\Groups(['user-id-list'])]
     private ?int $id = null;
 
+    #[ORM\Column(type: 'string', length: 32, unique: true, nullable: false)]
+    #[JMS\Groups(['video-user-info', 'elastica'])]
     #[ORM\Column(type: 'string', length: 32, unique: true, nullable: false)]
     #[JMS\Groups(['video-user-info', 'elastica'])]
     private string $login;
 
     #[Gedmo\Timestampable(on: 'create')]
+    #[Gedmo\Timestampable(on: 'create')]
     #[ORM\Column(name: 'created_at', type: 'datetime', nullable: false)]
     private DateTime $createdAt;
 
+    #[Gedmo\Timestampable(on: 'update')]
     #[Gedmo\Timestampable(on: 'update')]
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: false)]
     private DateTime $updatedAt;
@@ -58,6 +71,20 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: 'Subscription')]
     private Collection $subscriptionFollowers;
 
+    #[ORM\Column(type: 'string', length: 120, nullable: false)]
+    #[JMS\Exclude]
+    private string $password;
+
+    #[Assert\NotBlank]
+    #[Assert\GreaterThan(18)]
+    #[ORM\Column(type: 'integer', nullable: false)]
+    #[JMS\Groups(['video-user-info', 'elastica'])]
+    private int $age;
+
+    #[ORM\Column(type: 'boolean', nullable: false)]
+    #[JMS\Groups(['video-user-info'])]
+    #[JMS\SerializedName('isActive')]
+    private bool $isActive;
     #[ORM\Column(type: 'string', length: 120, nullable: false)]
     #[JMS\Exclude]
     private string $password;
@@ -235,7 +262,42 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     }
 
     public function setAge(int $age): void
+    public function getPassword(): string
     {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): void
+    {
+        $this->password = $password;
+    }
+
+    public function getAge(): int
+    {
+        return $this->age;
+    }
+
+    public function setAge(int $age): void
+    {
+        $this->age = $age;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): void
+    {
+        $this->isActive = $isActive;
+    }
+
+    /**
+     * @return User[]
+     */
+    public function getFollowers(): array
+    {
+        return $this->followers->toArray();
         $this->age = $age;
     }
 

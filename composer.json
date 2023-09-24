@@ -12,6 +12,7 @@
         "doctrine/doctrine-migrations-bundle": "*",
         "doctrine/orm": "*",
         "friendsofsymfony/elastica-bundle": "*",
+        "friendsofsymfony/elastica-bundle": "*",
         "friendsofsymfony/rest-bundle": "*",
         "jms/serializer-bundle": "*",
         "lexik/jwt-authentication-bundle": "*",
