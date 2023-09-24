@@ -2,13 +2,16 @@
 
 namespace App\Entity;
 
+use App\Repository\PostRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-
+use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation as JMS;
+use JsonException;
 
 #[ORM\Table(name: 'post')]
 #[ORM\Index(columns: ['author_id'], name: 'post__author_id__ind')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: PostRepository::class)]
 class Post
 {
     #[ORM\Column(name: 'id', type: 'bigint', unique: true)]
@@ -16,52 +19,31 @@ class Post
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     private ?int $id = null;
 
-    #[ORM\Column(type: 'string', length: 32, nullable: false)]
-    private ?string $title = null;
-
-    #[ORM\Column(type: 'string', length: 140, nullable: false)]
-    private ?string $content = null;
-
     #[ORM\ManyToOne(targetEntity: 'User', inversedBy: 'posts')]
     #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id')]
+    #[JMS\Groups(['elastica'])]
     private User $author;
 
+    #[ORM\Column(type: 'string', length: 140, nullable: false)]
+    #[JMS\Groups(['elastica'])]
+    private string $text;
+
     #[ORM\Column(name: 'created_at', type: 'datetime', nullable: false)]
+    #[Gedmo\Timestampable(on: 'create')]
     private DateTime $createdAt;
 
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: false)]
+    #[Gedmo\Timestampable(on: 'update')]
     private DateTime $updatedAt;
 
-    public function __construct()
-    {
-        $this->publishedAt = new \DateTime();
-        $this->comments = new ArrayCollection();
-        $this->tags = new ArrayCollection();
-    }
-
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getTitle(): ?string
+    public function setId(int $id): void
     {
-        return $this->title;
-    }
-
-    public function setTitle(?string $title): void
-    {
-        $this->title = $title;
-    }
-
-    public function getContent(): ?string
-    {
-        return $this->content;
-    }
-
-    public function setContent(?string $content): void
-    {
-        $this->content = $content;
+        $this->id = $id;
     }
 
     public function getAuthor(): User
@@ -74,12 +56,22 @@ class Post
         $this->author = $author;
     }
 
+    public function getText(): string
+    {
+        return $this->text;
+    }
+
+    public function setText(string $text): void
+    {
+        $this->text = $text;
+    }
+
     public function getCreatedAt(): DateTime {
         return $this->createdAt;
     }
 
     public function setCreatedAt(): void {
-        $this->createdAt = new DateTime();
+        $this->createdAt = DateTime::createFromFormat('U', (string)time());
     }
 
     public function getUpdatedAt(): DateTime {
@@ -90,16 +82,32 @@ class Post
         $this->updatedAt = new DateTime();
     }
 
-    #[ArrayShape(['id' => 'int|null', 'login' => 'string', 'createdAt' => 'string', 'updatedAt' => 'string'])]
     public function toArray(): array
     {
         return [
             'id' => $this->id,
             'login' => $this->author->getLogin(),
+            'text' => $this->text,
             'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
             'updatedAt' => $this->updatedAt->format('Y-m-d H:i:s'),
         ];
     }
 
+    public function toFeed(): array
+    {
+        return [
+            'id' => $this->id,
+            'author' => isset($this->author) ? $this->author->getLogin() : null,
+            'text' => $this->text,
+            'createdAt' => isset($this->createdAt) ? $this->createdAt->format('Y-m-d h:i:s') : '',
+        ];
+    }
 
+    /**
+     * @throws JsonException
+     */
+    public function toAMPQMessage(): string
+    {
+        return json_encode(['postId' => $this->id], JSON_THROW_ON_ERROR);
+    }
 }
