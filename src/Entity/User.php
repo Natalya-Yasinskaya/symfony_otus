@@ -9,14 +9,24 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as JMS;
+use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation as JMS;
 
+#[ApiResource(graphql: ['itemQuery' => ['item_query' => UserResolver::class, 'args' => ['id' => ['type' => 'Int'], 'login' => ['type' => 'String']], 'read' => false], 'collectionQuery' => ['collection_query' => UserCollectionResolver::class]])]
+#[ApiFilter(OrderFilter::class, properties: ['login'])]
 #[ORM\Table(name: '`user`')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthenticatedUserInterface
+class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const EMAIL_NOTIFICATION = 'email';
+    public const SMS_NOTIFICATION = 'sms';
+
     public const EMAIL_NOTIFICATION = 'email';
     public const SMS_NOTIFICATION = 'sms';
 
@@ -24,16 +34,21 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     #[JMS\Groups(['user-id-list'])]
+    #[JMS\Groups(['user-id-list'])]
     private ?int $id = null;
 
+    #[ORM\Column(type: 'string', length: 32, unique: true, nullable: false)]
+    #[JMS\Groups(['video-user-info', 'elastica'])]
     #[ORM\Column(type: 'string', length: 32, unique: true, nullable: false)]
     #[JMS\Groups(['video-user-info', 'elastica'])]
     private string $login;
 
     #[Gedmo\Timestampable(on: 'create')]
+    #[Gedmo\Timestampable(on: 'create')]
     #[ORM\Column(name: 'created_at', type: 'datetime', nullable: false)]
     private DateTime $createdAt;
 
+    #[Gedmo\Timestampable(on: 'update')]
     #[Gedmo\Timestampable(on: 'update')]
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: false)]
     private DateTime $updatedAt;
@@ -70,6 +85,20 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     #[JMS\Groups(['video-user-info'])]
     #[JMS\SerializedName('isActive')]
     private bool $isActive;
+    #[ORM\Column(type: 'string', length: 120, nullable: false)]
+    #[JMS\Exclude]
+    private string $password;
+
+    #[Assert\NotBlank]
+    #[Assert\GreaterThan(18)]
+    #[ORM\Column(type: 'integer', nullable: false)]
+    #[JMS\Groups(['video-user-info', 'elastica'])]
+    private int $age;
+
+    #[ORM\Column(type: 'boolean', nullable: false)]
+    #[JMS\Groups(['video-user-info'])]
+    #[JMS\SerializedName('isActive')]
+    private bool $isActive;
 
     #[ORM\Column(type: 'json', length: 1024, nullable: false)]
     private array $roles = [];
@@ -88,6 +117,9 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
     #[JMS\Groups(['elastica'])]
     private ?string $preferred = null;
+
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private ?bool $isProtected;
 
     public function __construct()
     {
@@ -169,6 +201,14 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
         }
     }
 
+    /**
+    * @return Subscription[]
+    */
+    public function getSubscriptionFollowers(): array
+    {
+        return $this->subscriptionFollowers->toArray();
+    }
+
     public function toArray(): array
     {
         return [
@@ -222,7 +262,42 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     }
 
     public function setAge(int $age): void
+    public function getPassword(): string
     {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): void
+    {
+        $this->password = $password;
+    }
+
+    public function getAge(): int
+    {
+        return $this->age;
+    }
+
+    public function setAge(int $age): void
+    {
+        $this->age = $age;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): void
+    {
+        $this->isActive = $isActive;
+    }
+
+    /**
+     * @return User[]
+     */
+    public function getFollowers(): array
+    {
+        return $this->followers->toArray();
         $this->age = $age;
     }
 
@@ -257,11 +332,13 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     }
 
     /**
-     * @param string[] $roles
-     */
-    public function setRoles(array $roles): void
+    * @param string[]|string $roles
+    *
+    * @throws JsonException
+    */
+    public function setRoles($roles): void
     {
-        $this->roles = $roles;
+        $this->roles = is_array($roles)? json_encode($roles, JSON_THROW_ON_ERROR) : $roles;
     }
 
     public function getSalt(): ?string
@@ -321,5 +398,15 @@ class User implements HasMetaTimestampsInterface, UserInterface, PasswordAuthent
     public function setPreferred(?string $preferred): void
     {
         $this->preferred = $preferred;
+    }
+
+    public function isProtected(): bool
+    {
+        return $this->isProtected ?? false;
+    }
+
+    public function setIsProtected(bool $isProtected): void
+    {
+        $this->isProtected = $isProtected;
     }
 }
